@@ -1,0 +1,53 @@
+When about to play
+	1. If last card in hand
+		Play it 
+	2. Check if lead suit = 0
+		a. if hand is all spades play first card in hand regardless if flag is set. Set flag
+		b. check if highest available of suit other than spades is in hand
+			true: play card
+			false: play lowest ranked card in hand regardless of suit (if possible later, do of suit with lowest amount of cards)
+	b. There are cards on the table
+		1. Check if leadsuit is in hand
+			Check if partner played
+				Partner winning
+					If card is highest available card in suit
+						Play lowest rank of suit in hand
+					Card is not highest on table
+						card is second highest available and highest is in hand
+							Play lowest rank of suit in hand
+						cannot play any other card than highest of suit
+							play card
+				Partner is not winning
+					Highest card of suit in hand
+						play
+			Partner didn't play
+				Highest card of suit is on table
+					play lowest rank of suit in hand
+				highest card of suit not on table
+					if in hand
+						play
+					if not
+						play lowest winning card if possible
+						if cant beat, play lowest
+		2. LeadSuit is not in hand		// This means you can cut
+			Partner is winning 
+				if hand is all spades throw lowest spade in hand
+				
+				throw lowest ranked card of any suit in hand other than spades
+
+			Partner not winning
+				if hand is all spades
+					play lowest winning spade in hand
+
+				if hand is not all spades play lowest ranked card of any suit (if possible later, do of suit with lowest amount of cards)
+
+
+
+
+hand in order by suit and ascending
+
+Available
+1	K,Q,..,4
+2	
+3	
+4	
