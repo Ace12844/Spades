@@ -50,6 +50,7 @@ void Table::clearTable()
 	_leadSuit = 0;
 	topCardIdx = -1;
 	tableHigh = 0;
+	clearPlayedCards();		// Remove played cards from remaining cards
 }
 
 void Table::display()
@@ -81,6 +82,16 @@ void Table::resetLeadWithSpade()
 bool Table::canLeadWithSpade()
 {
 	return leadWithSpade;
+}
+
+bool Table::moreThanOneLeft(int leadSuit)
+{
+	return getRemainingCards()[leadSuit].size() != 1;
+}
+
+bool Table::highestOfSuitPlayed()
+{
+	return getTableHigh() == getRemainingCards()[getLeadSuit()].begin()->getCardValue();
 }
 
 std::map<int, std::vector<Card>> Table::getRemainingCards()

@@ -36,67 +36,83 @@ Card ComputerPlayer::lowestNonSpade(std::vector<Card>::iterator first, std::vect
 	return *smallest;
 }
 
-void ComputerPlayer::play(Table& table, int index)
+Card ComputerPlayer::highestInHandPlay(Table table)
 {
-	//int p;
-	//bool find_spade = false;
-	//bool find = false;
-	//// If lead suit is 0 means that there hasnt been a card played so select best option from hand
-	//
-	//// Look at history of played cards to make best selection
-	//if (table.getLeadSuit() == 0)			// THIS FUNCTION PLAYS ANY CARD RIGHT NOW
-	//{
+	Card high;
+	for (auto& c : _hand)
+	{
+		// card value == availableCards[leadSuit][0] value and the suit != spades then this is highest of suit available
+		if ((c.getCardValue() == table.getRemainingCards()[c.getSuit()].begin()->getCardValue()) && c.getSuit() != 4)
+		{
+			// Highest card of a suit is in hand so play it
+			high = c;
+		}
+	}
+	return high;
+}
 
-	//	// Look at history of played cards and play best choice
-	//		
+Card ComputerPlayer::lowestOfSuit(Table table)
+{
+	Card lowSuit;
 
-	//	p = rand() % _hand.size();
-	//	table.addCard(_hand[p], index);
-	//	_hand.erase(_hand.begin() + p);		// Remove card from hand
-	//	std::this_thread::sleep_for(std::chrono::seconds(3));
-	//}
-	//else									
-	//{
-	//	// Check if partner has played a card first
+	for (auto& c : _hand)
+	{
+		if (c.getSuit() == table.getLeadSuit())
+		{
+			lowSuit = c;
+		}
+	}
+	return lowSuit;
+}
 
-	//		// If partner is winning, avoid using a spade and throw off lowest "ranked" card in hand that is not a spade unless hand is only spades
+Card ComputerPlayer::lowestWinningOfSuit(Table table)
+{
+	Card lowWinner;
 
-	//		// If partner is not winning then cut with lowest winning spade
+	for (auto& c : _hand)
+	{
+		if (c.getSuit() == table.getLeadSuit() && c.getCardValue() > table.getTableHigh())
+		{
+			lowWinner = c;
+		}
+	}
 
-	//	// If partner has not played, make best selection based on lead suit and history of played cards
-	//	for (int x = 0; x < _hand.size(); x++)
-	//	{
-	//		if (_hand[x].getSuit() == table.getLeadSuit())
-	//		{
-	//			table.addCard(_hand[x], index);
-	//			_hand.erase(_hand.begin() + x);
-	//			find = true;
-	//			break;
-	//		}
-	//	}
-	//	if (!find)							// If suit was not found then a spade is looked for first
-	//	{
-	//		for (int x = 0; x < _hand.size(); x++)
-	//		{
-	//			if (_hand[x].getSuit() == 4)			// Spade was found in hand
-	//			{
-	//				table.addCard(_hand[x], index);
-	//				_hand.erase(_hand.begin() + x);
-	//				find_spade = true;
-	//				if (table.canLeadWithSpade() == false)		// Check to see if flag to allow leading with spade is false. Allowing a player to cut triggers this rule to be set to true
-	//					table.allowCut();
-	//				break;
-	//			}
-	//		}
-	//		if (!find_spade)					// No spade found in hand. Play any card FOR NOW
-	//		{
-	//			p = rand() % _hand.size();
-	//			table.addCard(_hand[p], index);
-	//			_hand.erase(_hand.begin() + p);
-	//		}
-	//	}
-	//}
-	
+	return lowWinner;
+}
+
+bool ComputerPlayer::highestOfSuitInHand(Table &table)
+{
+	for (auto& c : _hand)
+	{
+		// card value == availableCards[leadSuit][0] value and the suit != spades then this is highest of suit available
+		if ((c.getCardValue() == table.getRemainingCards()[c.getSuit()].begin()->getCardValue()) && c.getSuit() != 4)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool ComputerPlayer::checkIfPartnerPlayed(Table table, int index)
+{
+	return table.getTable()[getPartner(index)].getCardValue() != 0;
+}
+
+bool ComputerPlayer::partnerPlayedHighestOfSuit(Table table, int index)
+{
+	return table.getRemainingCards()[table.getLeadSuit()].begin()->getCardValue() == table.getTable()[getPartner(index)].getCardValue();
+}
+
+bool ComputerPlayer::partnerPlayedSecondHighest(Table table, int index)
+{
+	if (!table.moreThanOneLeft(table.getLeadSuit()))
+		return false;
+	else
+		return table.getTable()[getPartner(index)].getCardValue() == table.getRemainingCards()[table.getLeadSuit()][1].getCardValue();
+}
+
+void ComputerPlayer::play(Table& table, int index)
+{	
 	// If last card in hand play it no matter what
 	if (_hand.size() == 1) {
 		table.addCard(_hand[0], index);
@@ -107,103 +123,125 @@ void ComputerPlayer::play(Table& table, int index)
 	// Check if lead suit = 0. This means there is no card on the table and the player can lead
 	if (table.getLeadSuit() == 0)
 	{
-		// If hand is all spades play first card in hand regardless if flag is set. Set flag for leading with spades if not set
-		if (_hand.begin()->getSuit() == 4) {			// Since hand is sorted by suit then rank, if the first card in hand's suit is spades the entire hand is spades
+		// Since hand is sorted by suit then rank, if the first card in hand's suit is spades										
+		// the entire hand is spades. Since lead suit hasn't been set then this player can 
+		// lead with spades
+		if (_hand.begin()->getSuit() == 4) {			
 			table.addCard(_hand[0], index);
 			_hand.erase(_hand.begin());		// Remove card from hand
 			std::this_thread::sleep_for(std::chrono::seconds(3));
-			if (table.canLeadWithSpade() == false)
+			if (!table.canLeadWithSpade())
 				table.allowCut();
 			return;
 		}
-		// Check if highest available of any suit other than spades is in hand
-		for (auto& c : _hand)
+
+		if (highestOfSuitInHand(table))
 		{
-			// card value == availableCards[leadSuit][0] value and the suit != spades then this is highest of suit available
-			if ((c.getCardValue() == table.getRemainingCards()[c.getSuit()].begin()->getCardValue()) && c.getSuit() != 4)
-			{
-				// Highest card of a suit is in hand so play it
-				table.addCard(c, index);
-				_hand.erase(std::remove(_hand.begin(), _hand.end(), c), _hand.end());	// Remove card from hand
-				std::this_thread::sleep_for(std::chrono::seconds(3));
-				return;
-			}
+			table.addCard(highestInHandPlay(table), index);
+			_hand.erase(std::remove(_hand.begin(), _hand.end(), table.getTable()[index]), _hand.end());
+			std::this_thread::sleep_for(std::chrono::seconds(3));
 		}
 
 		// Highest card of any suit is not in hand so play lowest ranked card of any suit other than spades in hand
-		table.addCard(lowestNonSpade(_hand.begin(), _hand.end()), index);
-		_hand.erase(std::remove(_hand.begin(), _hand.end(), table.getTable()[index]), _hand.end());
-		std::this_thread::sleep_for(std::chrono::seconds(3));
-		return;
+		if (table.getTable()[index].getCardValue() == 0)
+		{
+			table.addCard(lowestNonSpade(_hand.begin(), _hand.end()), index);
+			_hand.erase(std::remove(_hand.begin(), _hand.end(), table.getTable()[index]), _hand.end());
+			std::this_thread::sleep_for(std::chrono::seconds(3));
+			return;
+		}
 	}
-	// Lead suit is not 0 so there are cards on the table since lead suit has been set
+	// Lead suit has been set, so there are cards on the table
 	else
 	{
 		// Check if lead suit is in hand
 		if (leadSuitInHand(table.getLeadSuit()))
 		{
 			// Partner has played
-			if (table.getTable()[getPartner(index)].getCardValue() != 0)
+			if (checkIfPartnerPlayed(table, index))
 			{
 				// Player’s partner winning
 				if (getPartner(index) == table.getWinner())
 				{
-					// Partners card is highest availabe of suit
-					if (table.getRemainingCards()[table.getLeadSuit()].begin()->getCardValue() == table.getTable()[getPartner(index)].getCardValue())
+					// Partners card is highest available of suit
+					if (partnerPlayedHighestOfSuit(table, index))
 					{
-						// Play lowest rank of suit in hand
-						for (auto& c : _hand)
-						{
-							if (c.getSuit() == table.getLeadSuit())
-							{
-								table.addCard(c, index);
-								_hand.erase(std::remove(_hand.begin(), _hand.end(), c), _hand.end());
-								std::this_thread::sleep_for(std::chrono::seconds(3));
-								return;
-							}
-						}
+						// Play lowest of suit in hand
+						table.addCard(lowestOfSuit(table), index);
+						_hand.erase(std::remove(_hand.begin(), _hand.end(), table.getTable()[index]), _hand.end());
+						std::this_thread::sleep_for(std::chrono::seconds(3));
+						return;
 					}
 					// Partners card is not highest on table
 					else
 					{
-						// Check if highest available of any suit other than spades is in hand
-						for (auto& c : _hand)
+						// Check if player has highest card of lead suit in hand
+						if (highestOfSuitInHand(table))
 						{
-							// card value == availableCards[leadSuit][0] card value this is highest of suit available
-							if ((c.getCardValue() == table.getRemainingCards()[table.getLeadSuit()].begin()->getCardValue()))
+							// There are more than one possible card of the lead suit left && partner has played second highest
+							if (partnerPlayedSecondHighest(table, index))
 							{
-								// There are more than one possible card left of the suit
-								if (table.getRemainingCards()[table.getLeadSuit()].size() != 1)
-								{
-									// If player's partner card is the second highest on the table and highest is in hand, throw lowest card available of suit
-									if (table.getTable()[getPartner(index)].getCardValue() == table.getRemainingCards()[table.getLeadSuit()][1].getCardValue())
-									{
-										// Get lowest available of suit and play. Can be the highest card
-										for (auto& lowest : _hand)
-										{
-											if (lowest.getSuit() == table.getLeadSuit())
-											{
-												table.addCard(lowest, index);
-												_hand.erase(std::remove(_hand.begin(), _hand.end(), lowest), _hand.end());
-												std::this_thread::sleep_for(std::chrono::seconds(3));
-												return;
-											}
-										}
-									}
-									// Partner does not have second highest card
-									else
-									{
-										// Play highest card of suit since in hand. Currently c
-										table.addCard(c, index);
-										_hand.erase(std::remove(_hand.begin(), _hand.end(), c), _hand.end());
-										std::this_thread::sleep_for(std::chrono::seconds(3));
-										return;
-									}
-								}
+								table.addCard(lowestOfSuit(table), index);
+								_hand.erase(std::remove(_hand.begin(), _hand.end(), table.getTable()[index]), _hand.end());
+								std::this_thread::sleep_for(std::chrono::seconds(3));
+								return;
+							}
+							// Partner did not play second highest so play highest card of lead suit
+							else
+							{
+								table.addCard(highestInHandPlay(table), index);
+								_hand.erase(std::remove(_hand.begin(), _hand.end(), table.getTable()[index]), _hand.end());
+								std::this_thread::sleep_for(std::chrono::seconds(3));
+								return;
 							}
 						}
+						// Partner did not play highest and player does not have highest of lead suit in hand so play lowest of suit
+						else
+						{
+							table.addCard(lowestOfSuit(table), index);
+							_hand.erase(std::remove(_hand.begin(), _hand.end(), table.getTable()[index]), _hand.end());
+							std::this_thread::sleep_for(std::chrono::seconds(3));
+							return;
+						}
+						// Check if highest available of any suit other than spades is in hand
+						//for (auto& c : _hand)
+						//{
+						//	// card value == availableCards[leadSuit][0] card value this is highest of suit available
+						//	if ((c.getCardValue() == table.getRemainingCards()[table.getLeadSuit()].begin()->getCardValue()))
+						//	{
+						//		// There are more than one possible card left of the suit
+						//		if (table.getRemainingCards()[table.getLeadSuit()].size() != 1)
+						//		{
+						//			// If player's partner card is the second highest on the table and highest is in hand, throw lowest card available of suit
+						//			if (table.getTable()[getPartner(index)].getCardValue() == table.getRemainingCards()[table.getLeadSuit()][1].getCardValue())
+						//			{
+						//				// Get lowest available of suit and play. Can be the highest card
+						//				for (auto& lowest : _hand)
+						//				{
+						//					if (lowest.getSuit() == table.getLeadSuit())
+						//					{
+						//						table.addCard(lowest, index);
+						//						_hand.erase(std::remove(_hand.begin(), _hand.end(), lowest), _hand.end());
+						//						std::this_thread::sleep_for(std::chrono::seconds(3));
+						//						return;
+						//					}
+						//				}
+						//			}
+						//			// Partner does not have second highest card
+						//			else
+						//			{
+						//				// Play highest card of suit since in hand. Currently c
+						//				table.addCard(c, index);
+						//				_hand.erase(std::remove(_hand.begin(), _hand.end(), c), _hand.end());
+						//				std::this_thread::sleep_for(std::chrono::seconds(3));
+						//				return;
+						//			}
+						//		}
+						//	}
+						//}
+						
 						// For each loop can go through entire list and not find any of the highest card of suit in hand so immediately play lowest of suit possible
-						for (auto& c : _hand)
+						/*for (auto& c : _hand)
 						{
 							if (c.getSuit() == table.getLeadSuit())
 							{
@@ -212,14 +250,21 @@ void ComputerPlayer::play(Table& table, int index)
 								std::this_thread::sleep_for(std::chrono::seconds(3));
 								return;
 							}
-						}
+						}*/
 					}
 				}
 				// Player’s partner is not winning
 				else
 				{
-					// Check if highest card of suit in hand
-					for (auto& c : _hand)
+					// If highest of lead suit is in hand, play it
+					if (highestOfSuitInHand(table))
+					{
+						table.addCard(highestInHandPlay(table), index);
+						_hand.erase(std::remove(_hand.begin(), _hand.end(), table.getTable()[index]), _hand.end());
+						std::this_thread::sleep_for(std::chrono::seconds(3));
+					}
+
+					/*for (auto& c : _hand)
 					{
 						if (c.getCardValue() == table.getRemainingCards()[table.getLeadSuit()].begin()->getCardValue())
 						{
@@ -228,12 +273,18 @@ void ComputerPlayer::play(Table& table, int index)
 							std::this_thread::sleep_for(std::chrono::seconds(3));
 							return;
 						}
-					}
-					// Check if highest card of lead suit is on table
-					if (table.getTableHigh() == table.getRemainingCards()[table.getLeadSuit()].begin()->getCardValue())
+					}*/
+
+					// If highest card of lead suit is on table, play lowest of suit
+					if (table.highestOfSuitPlayed())
 					{
+						table.addCard(lowestOfSuit(table), index);
+						_hand.erase(std::remove(_hand.begin(), _hand.end(), table.getTable()[index]), _hand.end());
+						std::this_thread::sleep_for(std::chrono::seconds(3));
+						return;
+
 						// Play lowest of suit
-						for (auto& c : _hand)
+						/*for (auto& c : _hand)
 						{
 							if (c.getSuit() == table.getLeadSuit())
 							{
@@ -242,13 +293,20 @@ void ComputerPlayer::play(Table& table, int index)
 								std::this_thread::sleep_for(std::chrono::seconds(3));
 								return;
 							}
-						}
+						}*/
 					}
 					// Highest card of suit is not on table and not in hand
 					else
 					{
 						// Play lowest “winning” ranked card of suit in hand
-						for (auto& c : _hand)
+						if (lowestWinningOfSuit(table).getCardValue() != 0)
+						{
+							table.addCard(lowestWinningOfSuit(table), index);
+							_hand.erase(std::remove(_hand.begin(), _hand.end(), table.getTable()[index]), _hand.end());
+							std::this_thread::sleep_for(std::chrono::seconds(3));
+							return;
+						}
+						/*for (auto& c : _hand)
 						{
 							if (c.getSuit() == table.getLeadSuit() && c.getCardValue() > table.getTableHigh())
 							{
@@ -257,9 +315,16 @@ void ComputerPlayer::play(Table& table, int index)
 								std::this_thread::sleep_for(std::chrono::seconds(3));
 								return;
 							}
+						}*/
+						// No cards in hand can beat winning card of lead suit, play lowest card of suit
+						else
+						{
+							table.addCard(lowestOfSuit(table), index);
+							_hand.erase(std::remove(_hand.begin(), _hand.end(), table.getTable()[index]), _hand.end());
+							std::this_thread::sleep_for(std::chrono::seconds(3));
+							return;
 						}
-						// No cards can beat winning card of suit. Play lowest card of suit
-						for (auto& c : _hand)
+						/*for (auto& c : _hand)
 						{
 							if (c.getSuit() == table.getLeadSuit())
 							{
@@ -268,7 +333,7 @@ void ComputerPlayer::play(Table& table, int index)
 								std::this_thread::sleep_for(std::chrono::seconds(3));
 								return;
 							}
-						}
+						}*/
 					}	
 				}
 			}

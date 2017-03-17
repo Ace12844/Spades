@@ -1,0 +1,18 @@
+Removed from ComputerPlayer.cpp
+// Check if highest available of any suit other than spades is in hand
+//for (auto& c : _hand)
+//{
+//	// card value == availableCards[leadSuit][0] value and the suit != spades then this is highest of suit available
+//	if ((c.getCardValue() == table.getRemainingCards()[c.getSuit()].begin()->getCardValue()) && c.getSuit() != 4)
+//	{
+//		// Highest card of a suit is in hand so play it
+//		table.addCard(c, index);
+//		_hand.erase(std::remove(_hand.begin(), _hand.end(), c), _hand.end());	// Remove card from hand
+//		std::this_thread::sleep_for(std::chrono::seconds(3));
+//		return;
+//	}
+//}
+Replaced by code in ComputerPlayer.cpp line 89-94
+
+
+

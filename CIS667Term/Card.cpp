@@ -3,6 +3,7 @@
 
 Card::Card()
 {
+	_rank = _suit = 0;
 }
 
 Card::Card(int rank, int suit)

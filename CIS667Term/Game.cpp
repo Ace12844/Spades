@@ -40,7 +40,6 @@ void Game::playGame()
 		table.displayWinner();
 		winner = table.getWinner();
 		awardTrick(winner);
-		table.clearPlayedCards();		// Remove played cards from remaining cards
 		do
 		{
 			// Space next play out

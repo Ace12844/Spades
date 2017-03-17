@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Replaced Code">
+      <UniqueIdentifier>{375c1f24-7dc0-40c9-a2a3-c8cd0672c890}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Card.h">
@@ -62,5 +65,10 @@
     <ClCompile Include="Exec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Removed Code.txt">
+      <Filter>Replaced Code</Filter>
+    </Text>
   </ItemGroup>
 </Project>

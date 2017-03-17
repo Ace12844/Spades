@@ -22,6 +22,8 @@ public:
 	void allowCut();
 	void resetLeadWithSpade();
 	bool canLeadWithSpade();
+	bool moreThanOneLeft(int leadSuit);
+	bool highestOfSuitPlayed();
 	std::map<int, std::vector<Card> > getRemainingCards();
 	int getTableHigh();
 	void resetAvailableCard();
